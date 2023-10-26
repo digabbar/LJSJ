@@ -6,7 +6,7 @@ import {normalizeHeight, normalizeWidth} from '../scaling';
 import {colors, getFontFamily} from '../global';
 import {normalizeFontSize} from '../scaling';
 
-const Header = ({title, onBackPress, isNotShown}) => {
+const Header = ({title, onBackPress, isNotShown = true}) => {
   if (isNotShown) {
     return null;
   }
