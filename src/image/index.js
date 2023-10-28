@@ -11,6 +11,9 @@ const images = {
   LOGINBACKGROUND: require('./loginBackground.jpg'),
   LOGIN: require('./login.png'),
   PHONECALL: require('./phoneCall.png'),
+  OTPVERIFY: require('./otpVerify.jpg'),
+  LOGINNUM: require('./loginNum.png'),
+  TRADEMONEY: require('./tradeMoney.jpg'),
 };
 
 export default images;
