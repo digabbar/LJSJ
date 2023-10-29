@@ -16,6 +16,7 @@ import {
   normalizeHeight,
   normalizeWidth,
 } from '../../scaling';
+import {getFontFamily} from '../../global';
 
 const Login = ({navigation}) => {
   useLayoutEffect(() => {
@@ -69,6 +70,7 @@ const Login = ({navigation}) => {
       })
         .then(res => {
           navigation.navigate('verify', {
+            mob: res?.data?.mobile,
             otpSecret: res?.data?.otpSecret,
           });
         })
@@ -175,7 +177,7 @@ const styles = StyleSheet.create({
   signIn: {
     color: 'black',
     fontSize: normalizeFontSize(28),
-    fontWeight: '500',
+    fontFamily: getFontFamily(undefined, '500'),
     marginTop: normalizeHeight(5),
   },
   loginText: {

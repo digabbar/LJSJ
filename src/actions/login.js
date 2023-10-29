@@ -26,3 +26,14 @@ export const verifyOtp = async params => {
     throw error?.response?.data;
   }
 };
+
+export const resend = async params => {
+  try {
+    const {data} = await axiosInstance.post('/api/auth/resend', params);
+    console.log(data);
+    return data;
+  } catch (error) {
+    console.log(error?.response?.data);
+    throw error?.response?.data;
+  }
+};

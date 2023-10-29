@@ -7,11 +7,18 @@ import {
   useBlurOnFulfill,
   useClearByFocusCell,
 } from 'react-native-confirmation-code-field';
-import {normalizeHeight, normalizeWidth} from '../../scaling';
+import {
+  normalizeFontSize,
+  normalizeHeight,
+  normalizeWidth,
+} from '../../scaling';
 import {colors} from '../../global';
+import {resend} from '../../actions/login';
 const CELL_COUNT = 4;
 const VerifyOTP = ({navigation, route}) => {
   const [value, setValue] = useState('');
+  const [otpText, setOtpText] = useState(route?.params?.otpSecret);
+  const {mob} = route?.params;
   const ref = useBlurOnFulfill({value, cellCount: CELL_COUNT});
   const [props, getCellOnLayoutHandler] = useClearByFocusCell({
     value,
@@ -36,7 +43,10 @@ const VerifyOTP = ({navigation, route}) => {
     <View style={{flex: 1, backgroundColor: 'white'}}>
       <View style={{marginHorizontal: normalizeWidth(16)}}>
         <Text style={{color: colors.primary, fontSize: normalizeHeight(28)}}>
-          OTP-{route?.params?.otpSecret}
+          {mob}
+        </Text>
+        <Text style={{color: colors.primary, fontSize: normalizeHeight(28)}}>
+          OTP-{otpText}
         </Text>
         <CodeField
           ref={ref}
@@ -56,6 +66,22 @@ const VerifyOTP = ({navigation, route}) => {
             </Text>
           )}
         />
+        <Text
+          style={{color: colors.primary, fontSize: normalizeFontSize(24)}}
+          onPress={() => {
+            resend({
+              mob: mob,
+            })
+              .then(res => {
+                console.log(res);
+                setOtpText(res?.data?.otpSecret);
+              })
+              .catch(e => {
+                console.log(e);
+              });
+          }}>
+          Resend
+        </Text>
       </View>
     </View>
   );
