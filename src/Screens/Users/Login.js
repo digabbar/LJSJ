@@ -4,7 +4,6 @@ import {
   Text,
   View,
   Image,
-  ImageBackground,
   TextInput,
   StyleSheet,
   TouchableOpacity,
@@ -17,6 +16,8 @@ import {
   normalizeHeight,
   normalizeWidth,
 } from '../../scaling';
+import {getFontFamily} from '../../global';
+
 const Login = ({navigation}) => {
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -32,9 +33,8 @@ const Login = ({navigation}) => {
       ),
     });
   }, []);
-  const [number, setNumber] = useState(' ');
-  const [error, setError] = useState();
-  // console.log(number, 'number');
+  const [field, setField] = useState({});
+  const [error, setError] = useState({});
 
   const validateContactNumber = inputNumber => {
     if (!inputNumber) {
@@ -43,10 +43,11 @@ const Login = ({navigation}) => {
         number: 'Contact number is required',
       }));
       return false;
-    } else if (!/^[0-9]+$/.test(inputNumber)) {
+    } else if (!/^[5-9][0-9]{9}$/.test(inputNumber)) {
       setError(prev => ({
         ...prev,
-        number: 'Contact number can only contain numbers',
+        number:
+          'Contact number must be 10 digits long and start with a digit greater than 6',
       }));
       return false;
     } else {
@@ -59,49 +60,50 @@ const Login = ({navigation}) => {
   };
 
   const loginApi = () => {
-    console.log('priya111');
     let valid = true;
-    if (!validateContactNumber(number)) {
-      console.log('check22');
+    if (!validateContactNumber(field?.number)) {
       valid = false;
     }
-    // if (valid) {
-    console.log('priyanka');
-    login({
-      mob: number.number,
-    })
-      .then(res => {
-        console.log(res, 'login response-----');
-        navigation.navigate('verify', {
-          // frompage: 'login',
-          otpSecret: res.data.otpSecret,
-        });
+    if (valid) {
+      login({
+        mob: field?.number,
       })
-      .catch(error => {
-        console.error(error);
-      });
-    // }
+        .then(res => {
+          navigation.navigate('verify', {
+            mob: res?.data?.mobile,
+            otpSecret: res?.data?.otpSecret,
+          });
+        })
+        .catch(error => {
+          console.log(error, 'soham');
+        });
+    }
   };
 
   return (
     <KeyboardAvoidingView
       style={{
         flex: 1,
-        // alignItems: 'center',
-        // justifyContent: 'center',
+        alignItems: 'center',
+        justifyContent: 'center',
         backgroundColor: '#ffffff',
         padding: normalizeHeight(16),
-      }}>
+      }}
+      behavior="padding">
       <Text style={styles.loginText}>LOGIN ACCOUNT </Text>
 
       <View
         style={{
-          marginTop: normalizeHeight(70),
           alignItems: 'center',
+          width: '100%',
         }}>
         <Image
           source={images.LOGINNUM}
-          style={{width: normalizeWidth(200), height: normalizeHeight(200)}}
+          style={{
+            width: normalizeWidth(230),
+            height: normalizeHeight(230),
+            resizeMode: 'contain',
+          }}
         />
         <Text style={styles.signIn}>Sign In </Text>
         <Text style={styles.mobileNum}>Enter Mobile Number</Text>
@@ -111,9 +113,9 @@ const Login = ({navigation}) => {
             borderWidth: 1,
             borderColor: 'black',
             alignItems: 'center',
-            justifyContent: 'space-evenly',
             borderRadius: 10,
-            width: normalizeWidth(160),
+            width: '90%',
+            paddingHorizontal: normalizeWidth(16),
           }}>
           <View
             style={{
@@ -122,32 +124,35 @@ const Login = ({navigation}) => {
             }}>
             <Text style={styles.input}>+91</Text>
           </View>
-          <TextInput
-            style={styles.input}
-            keyboardType="numeric"
-            maxLength={10}
-            placeholder="9876545658"
-            placeholderTextColor={'#cccbd1'}
-            // onChangeText={() => {
-            //   console.log('checknow');
-            // }}
-            onChangeText={data => {
-              setNumber(prev => {
-                return {
-                  ...prev,
-                  number: data,
-                };
-              });
-              setError(prev => {
-                return {
-                  ...prev,
-                  number: null,
-                };
-              });
-            }}
-          />
+          <View style={{flex: 1}}>
+            <TextInput
+              style={styles.input}
+              keyboardType="numeric"
+              maxLength={10}
+              placeholder="9876545658"
+              placeholderTextColor={'#cccbd1'}
+              onChangeText={data => {
+                setField(prev => {
+                  return {
+                    ...prev,
+                    number: data,
+                  };
+                });
+                setError(prev => {
+                  return {
+                    ...prev,
+                    number: null,
+                  };
+                });
+              }}
+            />
+          </View>
         </View>
-        {/* {error.number && <Text style={{color: 'red'}}>{error.number}</Text>} */}
+        {error.number && (
+          <Text style={{color: 'red', textAlign: 'right', width: '90%'}}>
+            {error.number}
+          </Text>
+        )}
 
         <TouchableOpacity
           style={{
@@ -157,7 +162,7 @@ const Login = ({navigation}) => {
             backgroundColor: '#6a4be3',
             alignItems: 'center',
             justifyContent: 'center',
-            marginTop: normalizeHeight(80),
+            marginTop: normalizeHeight(30),
           }}
           onPress={loginApi}>
           <Text style={[styles.input, {color: 'white'}]}>CONTINUE</Text>
@@ -172,7 +177,8 @@ const styles = StyleSheet.create({
   signIn: {
     color: 'black',
     fontSize: normalizeFontSize(28),
-    fontWeight: '500',
+    fontFamily: getFontFamily(undefined, '500'),
+    marginTop: normalizeHeight(5),
   },
   loginText: {
     color: 'black',
@@ -181,12 +187,9 @@ const styles = StyleSheet.create({
   },
   input: {
     color: 'black',
-    // width: normalizeWidth(120),
     fontSize: normalizeFontSize(20),
     fontWeight: '500',
     letterSpacing: 0.1,
-    // paddingLeft: normalizeWidth(10),
-    // textAlign: 'center',
   },
   mobileNum: {
     color: 'black',

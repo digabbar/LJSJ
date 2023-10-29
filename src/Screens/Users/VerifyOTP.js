@@ -1,25 +1,33 @@
-import {useLayoutEffect, useState} from 'react';
+import {View, StyleSheet, Image, TouchableOpacity, Text} from 'react-native';
+import React, {useState, useLayoutEffect} from 'react';
+import {getFontFamily} from '../../global';
 import Header from '../../components/Header';
-import {CodeField} from 'react-native-confirmation-code-field';
 import {
-  Text,
-  View,
-  Image,
-  ImageBackground,
-  TextInput,
-  StyleSheet,
-  TouchableOpacity,
-  KeyboardAvoidingView,
-} from 'react-native';
-import {verifyOtp} from '../../actions/login';
-import images from '../../image';
+  CodeField,
+  Cursor,
+  useBlurOnFulfill,
+  useClearByFocusCell,
+} from 'react-native-confirmation-code-field';
 import {
   normalizeFontSize,
   normalizeHeight,
   normalizeWidth,
 } from '../../scaling';
-
+import {colors} from '../../global';
+import {resend, verifyOtp} from '../../actions/login';
+import images from '../../image';
+const CELL_COUNT = 4;
 const VerifyOTP = ({navigation, route}) => {
+  const [value, setValue] = useState('');
+  const [otpText, setOtpText] = useState(route?.params?.otpSecret);
+  const [error, setError] = useState('');
+  const {mob} = route?.params;
+  const ref = useBlurOnFulfill({value, cellCount: CELL_COUNT});
+  const [props, getCellOnLayoutHandler] = useClearByFocusCell({
+    value,
+    setValue,
+  });
+
   useLayoutEffect(() => {
     navigation.setOptions({
       header: () => (
@@ -33,95 +41,151 @@ const VerifyOTP = ({navigation, route}) => {
       ),
     });
   }, []);
-  console.log(route.params, 'param');
-  const [otp, setOtp] = useState(route.params);
-  const handleOtpChange = () => {
-    setOtp(value);
-    console.log('code');
-  };
-  const renderCell = ({index, symbol, isFocused}) => {
-    // Customize cell rendering based on your needs
-    return (
-      <View
-        key={index}
-        style={[styles.codeCell, isFocused && styles.focusedCell]}>
-        <Text style={styles.cellText}>
-          {symbol || (isFocused ? '|' : null)}
-        </Text>
-      </View>
-    );
-  };
-
-  const handleSubmit = () => {
-    console.log('Submitted OTP:');
+  const verify = () => {
+    if (value === otpText) {
+      setError('');
+      navigation.navigate('Home');
+    } else {
+      setError('Please enter a valid OTP ');
+    }
   };
   return (
-    // <View style={{flex: 1, alignItems: 'center', backgroundColor: '#ffffff'}}>
-    //   <View style={{marginTop: normalizeHeight(70)}}>
-    //     <Image source={images.OTPVERIFY} style={{width: 200, height: 280}} />
-    //     <Text style={{color: 'black'}}>Enter OTP </Text>
-    //   </View>
-    // </View>
-    <View style={styles.container}>
-      <Text style={styles.title}>Enter OTP</Text>
-      <Text style={{color: 'black'}}> {JSON.stringify(route.params)}</Text>
-      <CodeField
-        // value={otp}
-        // onChangeText={handleOtpChange}
-        cellCount={4} // Number of OTP digits
-        autoFocus={true}
-        variant="outlined"
-        keyboardType="numeric"
-        // cellProps={{style: styles.codeCell}}
-        containerStyle={styles.codeContainer}
-        renderCell={renderCell}
-      />
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: 'white',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}>
+      <Text
+        style={{
+          color: '#6a4be3',
+          fontFamily: getFontFamily(undefined, '500'),
+          fontSize: normalizeFontSize(26),
+        }}>
+        OTP Verification
+      </Text>
+      <View
+        style={{
+          marginHorizontal: normalizeWidth(16),
+          alignItems: 'center',
+        }}>
+        <Image
+          source={images.OTPVERIFY}
+          style={{width: normalizeWidth(220), height: normalizeHeight(220)}}
+        />
+        <Text
+          style={{
+            color: colors.primary,
+            fontFamily: getFontFamily(undefined, '500'),
+            textAlign: 'left',
+          }}>
+          Your OTP-{otpText}
+        </Text>
+        <Text
+          style={{
+            color: '#4056c7',
+            fontFamily: getFontFamily(undefined, '500'),
+            textAlign: 'center',
+            lineHeight: normalizeHeight(16),
+          }}>
+          Please enter the Verification code{'\n'} sent to +91-{mob}
+        </Text>
+        <CodeField
+          ref={ref}
+          {...props}
+          value={value}
+          onChangeText={setValue}
+          cellCount={CELL_COUNT}
+          rootStyle={styles.codeFieldRoot}
+          keyboardType="number-pad"
+          textContentType="oneTimeCode"
+          renderCell={({index, symbol, isFocused}) => (
+            <Text
+              key={index}
+              style={[styles.cell, isFocused && styles.focusCell]}
+              onLayout={getCellOnLayoutHandler(index)}>
+              {symbol || (isFocused ? <Cursor /> : null)}
+            </Text>
+          )}
+        />
+      </View>
+      <Text style={styles.errorText}>{error}</Text>
 
-      <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-        <Text style={styles.submitButtonText}>Submit</Text>
+      <Text
+        style={{
+          color: '#4056c7',
+          fontSize: normalizeFontSize(16),
+          marginTop: normalizeHeight(15),
+          textAlign: 'right',
+          width: '80%',
+        }}
+        onPress={() => {
+          resend({
+            mob: mob,
+          })
+            .then(res => {
+              console.log(res);
+              setOtpText(res?.data?.otpSecret);
+            })
+            .catch(e => {
+              console.log(e);
+            });
+        }}>
+        Resend
+      </Text>
+      <TouchableOpacity
+        style={{
+          height: normalizeHeight(40),
+          width: normalizeWidth(160),
+          borderRadius: normalizeHeight(10),
+          backgroundColor: '#6a4be3',
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginTop: normalizeHeight(30),
+        }}
+        onPress={verify}>
+        <Text
+          style={[
+            styles.input,
+            {
+              color: 'white',
+              fontFamily: getFontFamily(undefined, '500'),
+              fontSize: normalizeFontSize(20),
+              letterSpacing: 0.9,
+            },
+          ]}>
+          VERIFY
+        </Text>
       </TouchableOpacity>
     </View>
   );
 };
-
-export default VerifyOTP;
-
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    color: 'black',
-  },
-  codeContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginVertical: 60,
-    marginHorizontal: normalizeWidth(10),
-    color: 'black',
-    backgroundColor: 'red',
-  },
-  codeCell: {
-    borderBottomWidth: 2,
-    borderColor: 'black',
-    fontSize: 20,
-    paddingHorizontal: 10,
-    textAlign: 'center',
-    color: 'black',
-  },
-  submitButton: {
-    backgroundColor: 'blue',
-    padding: 10,
+  root: {flex: 1, padding: 20},
+  title: {textAlign: 'center', fontSize: 30},
+  codeFieldRoot: {marginTop: 20},
+  cell: {
+    width: 50,
+    height: 50,
     borderRadius: 5,
-  },
-  submitButtonText: {
+    lineHeight: 38,
+    fontSize: 24,
+    lineHeight: 45,
     color: 'black',
-    fontSize: 18,
+    borderWidth: 1,
+    borderColor: '#7d8fe8',
+    textAlign: 'center',
+    margin: 10,
+  },
+  focusCell: {
+    borderColor: '#000',
+  },
+  errorText: {
+    color: 'red',
+    textAlign: 'right',
+    width: '65%',
   },
 });
+
+export default VerifyOTP;

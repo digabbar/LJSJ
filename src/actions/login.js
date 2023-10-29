@@ -7,12 +7,12 @@ export const login = async params => {
     console.log(data, 'data');
     return data;
   } catch (error) {
-    console.log(error);
     Toast.show({
       type: 'error',
-      text1: 'Error',
-      text2: 'An error occurred. Please try again.',
+      text1: 'ERROR!',
+      text2: error?.response?.data?.message,
     });
+    throw error?.response?.data;
   }
 };
 
@@ -22,7 +22,18 @@ export const verifyOtp = async params => {
     console.log(data);
     return data;
   } catch (error) {
-    console.log(error);
-    throw error;
+    console.log(error?.response?.data);
+    throw error?.response?.data;
+  }
+};
+
+export const resend = async params => {
+  try {
+    const {data} = await axiosInstance.post('/api/auth/resend', params);
+    console.log(data);
+    return data;
+  } catch (error) {
+    console.log(error?.response?.data);
+    throw error?.response?.data;
   }
 };
