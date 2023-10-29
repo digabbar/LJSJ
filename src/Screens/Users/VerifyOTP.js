@@ -1,25 +1,23 @@
-import {useLayoutEffect, useState} from 'react';
+import {View, StyleSheet, Text} from 'react-native';
+import React, {useState, useLayoutEffect} from 'react';
 import Header from '../../components/Header';
-import {CodeField} from 'react-native-confirmation-code-field';
 import {
-  Text,
-  View,
-  Image,
-  ImageBackground,
-  TextInput,
-  StyleSheet,
-  TouchableOpacity,
-  KeyboardAvoidingView,
-} from 'react-native';
-import {verifyOtp} from '../../actions/login';
-import images from '../../image';
-import {
-  normalizeFontSize,
-  normalizeHeight,
-  normalizeWidth,
-} from '../../scaling';
-
+  CodeField,
+  Cursor,
+  useBlurOnFulfill,
+  useClearByFocusCell,
+} from 'react-native-confirmation-code-field';
+import {normalizeHeight, normalizeWidth} from '../../scaling';
+import {colors} from '../../global';
+const CELL_COUNT = 4;
 const VerifyOTP = ({navigation, route}) => {
+  const [value, setValue] = useState('');
+  const ref = useBlurOnFulfill({value, cellCount: CELL_COUNT});
+  const [props, getCellOnLayoutHandler] = useClearByFocusCell({
+    value,
+    setValue,
+  });
+
   useLayoutEffect(() => {
     navigation.setOptions({
       header: () => (
@@ -33,95 +31,54 @@ const VerifyOTP = ({navigation, route}) => {
       ),
     });
   }, []);
-  console.log(route.params, 'param');
-  const [otp, setOtp] = useState(route.params);
-  const handleOtpChange = () => {
-    setOtp(value);
-    console.log('code');
-  };
-  const renderCell = ({index, symbol, isFocused}) => {
-    // Customize cell rendering based on your needs
-    return (
-      <View
-        key={index}
-        style={[styles.codeCell, isFocused && styles.focusedCell]}>
-        <Text style={styles.cellText}>
-          {symbol || (isFocused ? '|' : null)}
-        </Text>
-      </View>
-    );
-  };
 
-  const handleSubmit = () => {
-    console.log('Submitted OTP:');
-  };
   return (
-    // <View style={{flex: 1, alignItems: 'center', backgroundColor: '#ffffff'}}>
-    //   <View style={{marginTop: normalizeHeight(70)}}>
-    //     <Image source={images.OTPVERIFY} style={{width: 200, height: 280}} />
-    //     <Text style={{color: 'black'}}>Enter OTP </Text>
-    //   </View>
-    // </View>
-    <View style={styles.container}>
-      <Text style={styles.title}>Enter OTP</Text>
-      <Text style={{color: 'black'}}> {JSON.stringify(route.params)}</Text>
-      <CodeField
-        // value={otp}
-        // onChangeText={handleOtpChange}
-        cellCount={4} // Number of OTP digits
-        autoFocus={true}
-        variant="outlined"
-        keyboardType="numeric"
-        // cellProps={{style: styles.codeCell}}
-        containerStyle={styles.codeContainer}
-        renderCell={renderCell}
-      />
-
-      <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-        <Text style={styles.submitButtonText}>Submit</Text>
-      </TouchableOpacity>
+    <View style={{flex: 1, backgroundColor: 'white'}}>
+      <View style={{marginHorizontal: normalizeWidth(16)}}>
+        <Text style={{color: colors.primary, fontSize: normalizeHeight(28)}}>
+          OTP-{route?.params?.otpSecret}
+        </Text>
+        <CodeField
+          ref={ref}
+          {...props}
+          value={value}
+          onChangeText={setValue}
+          cellCount={CELL_COUNT}
+          rootStyle={styles.codeFieldRoot}
+          keyboardType="number-pad"
+          textContentType="oneTimeCode"
+          renderCell={({index, symbol, isFocused}) => (
+            <Text
+              key={index}
+              style={[styles.cell, isFocused && styles.focusCell]}
+              onLayout={getCellOnLayoutHandler(index)}>
+              {symbol || (isFocused ? <Cursor /> : null)}
+            </Text>
+          )}
+        />
+      </View>
     </View>
   );
 };
-
-export default VerifyOTP;
-
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    color: 'black',
-  },
-  codeContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginVertical: 60,
-    marginHorizontal: normalizeWidth(10),
-    color: 'black',
-    backgroundColor: 'red',
-  },
-  codeCell: {
-    borderBottomWidth: 2,
-    borderColor: 'black',
-    fontSize: 20,
-    paddingHorizontal: 10,
-    textAlign: 'center',
-    color: 'black',
-  },
-  submitButton: {
-    backgroundColor: 'blue',
-    padding: 10,
+  root: {flex: 1, padding: 20},
+  title: {textAlign: 'center', fontSize: 30},
+  codeFieldRoot: {marginTop: 20},
+  cell: {
+    width: 50,
+    height: 50,
     borderRadius: 5,
-  },
-  submitButtonText: {
+    lineHeight: 38,
+    fontSize: 24,
+    lineHeight: 45,
     color: 'black',
-    fontSize: 18,
+    borderWidth: 1,
+    borderColor: '#00000030',
+    textAlign: 'center',
+  },
+  focusCell: {
+    borderColor: '#000',
   },
 });
+
+export default VerifyOTP;
